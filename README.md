@@ -1,4 +1,4 @@
-# Generic x86_64 System
+# Generic x86_64 System with preempt_rt kernel
 
 [![Hex version](https://img.shields.io/hexpm/v/nerves_system_x86_64.svg "Hex version")](https://hex.pm/packages/nerves_system_x86_64)
 [![CI](https://github.com/nerves-project/nerves_system_x86_64/actions/workflows/ci.yml/badge.svg)](https://github.com/nerves-project/nerves_system_x86_64/actions/workflows/ci.yml)
@@ -21,7 +21,7 @@ probably will require some work.
 ## Using
 
 The most common way of using this Nerves System is create a project with `mix
-nerves.new` and to export `MIX_TARGET=x86_64`. See the [Getting started
+nerves.new` and to export `MIX_TARGET=x86_64_rt`. See the [Getting started
 guide](https://nerves.hexdocs.pm/getting-started.html#creating-a-new-nerves-app)
 for more information.
 
@@ -32,13 +32,13 @@ systems](https://nerves.hexdocs.pm/systems.html#customizing-your-own-nerves-syst
 ## Running in qemu
 
 It's possible to run Nerves projects built with this system in Qemu with some
-work. If you create a Nerves projects with the `nerves_system_x86_64`
+work. If you create a Nerves projects with the `nerves_system_x86_64_rt`
 dependency, here are the steps:
 
 Create firmware like normal:
 
 ```sh
-export MIX_TARGET=x86_64
+export MIX_TARGET=x86_64_rt
 mix deps.get
 mix firmware
 ```
