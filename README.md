@@ -29,6 +29,23 @@ If you need custom modifications to this system for your device, clone this
 repository and update as described in [Making custom
 systems](https://nerves.hexdocs.pm/systems.html#customizing-your-own-nerves-system)
 
+## Docker containers
+
+This system starts the Docker daemon before the Nerves application, after the
+persistent `/root` partition is mounted. It does not start application
+containers. The daemon stores images, container metadata, and writable layers
+under `/root/docker`, which survives A/B firmware updates. Factory reset erases
+this data.
+
+The firmware application owns container lifecycle. It should create containers
+with restart disabled (Docker's default, or `--restart=no`), then inspect and
+start the desired containers after the Docker API is ready. This lets the app
+control startup order and health checks instead of Docker starting containers
+before the app. The app is also responsible for restarting failed containers.
+
+The Docker API is available on `/var/run/docker.sock`. Access to this socket
+allows control of the host and should be treated as root-level access.
+
 ## Running in qemu
 
 It's possible to run Nerves projects built with this system in Qemu with some
