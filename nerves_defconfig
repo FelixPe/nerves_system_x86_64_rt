@@ -2,11 +2,12 @@ BR2_x86_64=y
 BR2_TOOLCHAIN_EXTERNAL=y
 BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
 BR2_TOOLCHAIN_EXTERNAL_DOWNLOAD=y
-BR2_TOOLCHAIN_EXTERNAL_URL="https://github.com/nerves-project/toolchains/releases/download/v15.3.0/nerves_toolchain_x86_64_nerves_linux_musl-linux_${shell uname -m}-15.3.0-EA072ED.tar.xz"
-BR2_TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX="$(ARCH)-nerves-linux-musl"
+BR2_TOOLCHAIN_EXTERNAL_URL="https://github.com/nerves-project/toolchains/releases/download/v15.3.1/nerves_toolchain_x86_64_nerves_linux_gnu-linux_${shell uname -m}-15.3.1-7A36E3A.tar.xz"
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX="$(ARCH)-nerves-linux-gnu"
 BR2_TOOLCHAIN_EXTERNAL_GCC_15=y
 BR2_TOOLCHAIN_EXTERNAL_HEADERS_6_0=y
-BR2_TOOLCHAIN_EXTERNAL_CUSTOM_MUSL=y
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_GLIBC=y
+# BR2_TOOLCHAIN_EXTERNAL_INET_RPC is not set
 BR2_TOOLCHAIN_EXTERNAL_CXX=y
 BR2_TOOLCHAIN_EXTERNAL_FORTRAN=y
 BR2_TOOLCHAIN_EXTERNAL_OPENMP=y

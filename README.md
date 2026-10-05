@@ -29,6 +29,23 @@ If you need custom modifications to this system for your device, clone this
 repository and update as described in [Making custom
 systems](https://nerves.hexdocs.pm/systems.html#customizing-your-own-nerves-system)
 
+## C library and native dependencies
+
+This system uses glibc 2.43 from the official
+`nerves_toolchain_x86_64_nerves_linux_gnu` 15.3.1 toolchain. Native dependencies
+must target `x86_64-nerves-linux-gnu`, not musl.
+
+When migrating from a musl-based system, fetch the new dependency with
+`mix deps.get` and perform a full clean Buildroot rebuild; an incremental
+rebuild is not supported when changing libc. In the system build shell
+(`mix nerves.system.shell`), run `make clean`, then `make`.
+Rebuild the firmware application's native dependencies and NIFs against the
+new system as well. Do not reuse musl-built system or application artifacts.
+
+glibc enables using glibc-dependent native code such as `rclex`, but does not
+provide ROS 2 itself. The firmware still needs compatible ROS 2 libraries and
+their runtime dependencies, built for this target.
+
 ## Docker containers
 
 This system starts the Docker daemon before the Nerves application, after the

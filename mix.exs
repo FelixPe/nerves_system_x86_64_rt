@@ -56,7 +56,7 @@ defmodule NervesSystemX8664Rt.MixProject do
         {"TARGET_ARCH", "x86_64"},
         {"TARGET_CPU", "x86-64"},
         {"TARGET_OS", "linux"},
-        {"TARGET_ABI", "musl"},
+        {"TARGET_ABI", "gnu"},
         {"TARGET_GCC_FLAGS",
          "-m64 -fstack-protector-strong -march=x86-64 -fPIE -pie -Wl,-z,now -Wl,-z,relro"}
       ],
@@ -68,7 +68,7 @@ defmodule NervesSystemX8664Rt.MixProject do
     [
       {:nerves, "~> 1.11 or ~> 2.0 or ~> 2.0.0-dev", runtime: false},
       {:nerves_system_br, "1.35.0", runtime: false},
-      {:nerves_toolchain_x86_64_nerves_linux_musl, "~> 15.3.0", runtime: false},
+      {:nerves_toolchain_x86_64_nerves_linux_gnu, "~> 15.3.0", runtime: false},
       {:nerves_system_linter, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :docs, runtime: false}
     ]
