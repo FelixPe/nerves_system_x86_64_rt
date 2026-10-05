@@ -1,8 +1,8 @@
-defmodule NervesSystemX8664.MixProject do
+defmodule NervesSystemX8664Rt.MixProject do
   use Mix.Project
 
-  @github_organization "nerves-project"
-  @app :nerves_system_x86_64
+  @github_organization "FelixPe"
+  @app :nerves_system_x86_64_rt
   @source_url "https://github.com/#{@github_organization}/#{@app}"
   @version Path.join(__DIR__, "VERSION")
            |> File.read!()
@@ -54,9 +54,11 @@ defmodule NervesSystemX8664.MixProject do
       # llvm-based tooling that may need more precise processor information.
       env: [
         {"TARGET_ARCH", "x86_64"},
+        {"TARGET_CPU", "x86-64"},
         {"TARGET_OS", "linux"},
         {"TARGET_ABI", "musl"},
-        {"TARGET_GCC_FLAGS", "-m64 -fstack-protector-strong -march=x86-64 -fPIE -pie -Wl,-z,now -Wl,-z,relro"}
+        {"TARGET_GCC_FLAGS",
+         "-m64 -fstack-protector-strong -march=x86-64 -fPIE -pie -Wl,-z,now -Wl,-z,relro"}
       ],
       checksum: package_files()
     ]
@@ -74,7 +76,7 @@ defmodule NervesSystemX8664.MixProject do
 
   defp description do
     """
-    Nerves System - x86_64
+    Nerves System - x86_64 with preempt-rt kernel
     """
   end
 

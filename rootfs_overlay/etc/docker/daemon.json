@@ -1,0 +1,4 @@
+{
+  "data-root": "/root/docker",
+  "hosts": ["unix:///var/run/docker.sock"]
+}
