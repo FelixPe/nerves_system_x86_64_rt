@@ -12,7 +12,7 @@ probably will require some work.
 | -------------------- | ------------------------------- |
 | CPU                  | Intel                           |
 | Memory               | 512 MB+ DRAM                    |
-| Storage              | Hard disk/SSD/etc. (/dev/sda)   |
+| Storage              | 32 GB+ disk/SSD (/dev/sda)       |
 | Linux kernel         | 6.18                            |
 | IEx terminal         | Virtual serial - ttyS0          |
 | Hardware I/O         | None                            |
@@ -45,6 +45,17 @@ new system as well. Do not reuse musl-built system or application artifacts.
 glibc enables using glibc-dependent native code such as `rclex`, but does not
 provide ROS 2 itself. The firmware still needs compatible ROS 2 libraries and
 their runtime dependencies, built for this target.
+
+## Storage layout
+
+Use a disk of at least 32 GB. Both read-only SquashFS rootfs slots reserve
+4 GiB (8388608 sectors of 512 bytes) each. The writable ext4 application
+partition mounted at `/root` has a 10 GiB minimum and expands to use the
+remaining disk space. On a 32 GB disk, approximately 21.8 GiB is available
+for `/root`, including Docker data.
+
+This layout is intended for complete flashing of new devices. Migration from
+the previous partition layout is not supported.
 
 ## Docker containers
 
@@ -80,7 +91,7 @@ mix firmware
 Create the disk image (virtual MicroSD/SD/eMMC):
 
 ```sh
-qemu-img create -f raw disk.img 1G
+qemu-img create -f raw disk.img 32G
 ```
 
 Use `fwup` to write the image for the first time:
