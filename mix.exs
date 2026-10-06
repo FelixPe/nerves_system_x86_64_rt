@@ -110,6 +110,7 @@ defmodule NervesSystemX8664Rt.MixProject do
       "fwup-ops.conf",
       "fwup.conf",
       "grub.cfg",
+      "busybox.fragment",
       "LICENSES/*",
       "linux-6.18.defconfig",
       "mix.exs",
