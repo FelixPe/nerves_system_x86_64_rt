@@ -11,6 +11,7 @@ path = [
  "REUSE.toml",
  "mix.exs",
  "mix.lock",
+ "test/weston-kiosk.sh",
  "VERSION"
 ]
 precedence = "aggregate"
@@ -69,7 +70,8 @@ path = [
  "grub.cfg",
  "rootfs_overlay/etc/boardid.config",
  "rootfs_overlay/etc/erlinit.config",
- "rootfs_overlay/etc/fw_env.config"
+ "rootfs_overlay/etc/fw_env.config",
+ "rootfs_overlay/etc/xdg/weston/weston.ini"
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "None"

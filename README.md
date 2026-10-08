@@ -46,25 +46,58 @@ glibc enables using glibc-dependent native code such as `rclex`, but does not
 provide ROS 2 itself. The firmware still needs compatible ROS 2 libraries and
 their runtime dependencies, built for this target.
 
-## Cog DRM pointer input
+## Cog on Weston
 
-This system backports independent pointer dispatch to Cog 0.18.5. The patch
-is applied through Buildroot's global patch directories, preserving the
-patches supplied by Nerves. Pointer input does not require a hardware cursor.
+This system includes Cog's FDO/Wayland backend and Weston with its DRM backend
+and kiosk shell. Weston owns the display and input devices, makes application
+windows fullscreen, and disables idle screen blanking. Cog's direct DRM
+backend and its local pointer patch are no longer included. Existing kernel
+and Nerves patches are unchanged.
 
-After rebuilding the system and firmware, the application should launch Cog
-with `COG_PLATFORM_DRM_POINTER=1` in its process environment:
+The firmware application owns startup and supervision of both processes;
+the system does not automatically launch them or hard-code a kiosk URL.
+Create a private runtime directory owned by the user running Weston and Cog:
 
 ```sh
-COG_PLATFORM_DRM_POINTER=1 cog --platform=drm --platform-params=renderer=gles http://localhost:4000
+mkdir -p /run/weston
+chmod 0700 /run/weston
 ```
 
-`COG_PLATFORM_DRM_CURSOR=1` remains optional for a visible hardware cursor.
-Pointer events still reach WPE if hardware cursor initialization fails.
-When reusing a Buildroot build directory where Cog has already been patched,
-run `make cog-dirclean` followed by `make` in `mix nerves.system.shell` to
-ensure the new patch is applied. Rebuild the application's firmware against
-the resulting system artifact.
+Start Weston as a separately supervised process with these settings. The
+built-in libseat backend is intended for the root-run Nerves application and
+does not require a separate seatd daemon:
+
+```sh
+XDG_RUNTIME_DIR=/run/weston LIBSEAT_BACKEND=builtin weston --config=/etc/xdg/weston/weston.ini --socket=wayland-0
+```
+
+Once Weston accepts Wayland connections and the local HTTP endpoint is ready,
+start Cog with the same runtime directory and socket:
+
+```sh
+XDG_RUNTIME_DIR=/run/weston WAYLAND_DISPLAY=wayland-0 cog --platform=fdo http://localhost:4000
+```
+
+Remove the old `--platform=drm`, `--platform-params=renderer=gles`, and
+`COG_PLATFORM_DRM_POINTER`/`COG_PLATFORM_DRM_CURSOR` settings from the
+application launcher. Use readiness checks rather than fixed startup delays.
+Restart Cog if Weston exits and is restarted, since its Wayland connection
+is lost. Keep restart attempts bounded with backoff and capture both logs.
+
+Native touchscreen input does not require a mouse cursor. Mouse-capable
+devices may still show one; this configuration does not force cursors hidden.
+
+The system-local makefile disables Cog 0.18.5's optional Weston direct-display
+extension because it does not recognize Weston 15's protocol package. Normal
+Wayland rendering remains enabled; Weston can still use direct scanout when
+the buffers and output permit it.
+
+When reusing a Buildroot build directory, run `make cog-dirclean` followed by
+`make` in `mix nerves.system.shell` to remove the previously patched Cog and
+build the new configuration. Rebuild firmware against the resulting system
+artifact. Validate display output, touch input, and restart recovery on the
+target device. The configuration check is `bash test/weston-kiosk.sh` after
+the Nerves Buildroot tree has been prepared.
 
 ## Storage layout
 

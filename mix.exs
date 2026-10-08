@@ -107,6 +107,7 @@ defmodule NervesSystemX8664Rt.MixProject do
       "fwup_include",
       "rootfs_overlay",
       "patches",
+      "external.mk",
       "CHANGELOG.md",
       "fwup-ops.conf",
       "fwup.conf",
