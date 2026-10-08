@@ -67,7 +67,7 @@ defmodule NervesSystemX8664Rt.MixProject do
   defp deps do
     [
       {:nerves, "~> 1.11 or ~> 2.0 or ~> 2.0.0-dev", runtime: false},
-      {:nerves_system_br, "1.35.0", runtime: false},
+      {:nerves_system_br, "1.35.1", runtime: false},
       {:nerves_toolchain_x86_64_nerves_linux_gnu, "~> 15.3.0", runtime: false},
       {:nerves_system_linter, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :docs, runtime: false}
@@ -106,6 +106,7 @@ defmodule NervesSystemX8664Rt.MixProject do
     [
       "fwup_include",
       "rootfs_overlay",
+      "patches",
       "CHANGELOG.md",
       "fwup-ops.conf",
       "fwup.conf",

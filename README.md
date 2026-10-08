@@ -46,6 +46,26 @@ glibc enables using glibc-dependent native code such as `rclex`, but does not
 provide ROS 2 itself. The firmware still needs compatible ROS 2 libraries and
 their runtime dependencies, built for this target.
 
+## Cog DRM pointer input
+
+This system backports independent pointer dispatch to Cog 0.18.5. The patch
+is applied through Buildroot's global patch directories, preserving the
+patches supplied by Nerves. Pointer input does not require a hardware cursor.
+
+After rebuilding the system and firmware, the application should launch Cog
+with `COG_PLATFORM_DRM_POINTER=1` in its process environment:
+
+```sh
+COG_PLATFORM_DRM_POINTER=1 cog --platform=drm --platform-params=renderer=gles http://localhost:4000
+```
+
+`COG_PLATFORM_DRM_CURSOR=1` remains optional for a visible hardware cursor.
+Pointer events still reach WPE if hardware cursor initialization fails.
+When reusing a Buildroot build directory where Cog has already been patched,
+run `make cog-dirclean` followed by `make` in `mix nerves.system.shell` to
+ensure the new patch is applied. Rebuild the application's firmware against
+the resulting system artifact.
+
 ## Storage layout
 
 Use a disk of at least 32 GB. Both read-only SquashFS rootfs slots reserve
@@ -59,11 +79,13 @@ the previous partition layout is not supported.
 
 ## Docker containers
 
-This system starts the Docker daemon before the Nerves application, after the
-persistent `/root` partition is mounted. It does not start application
-containers. The daemon stores images, container metadata, and writable layers
-under `/root/docker`, which survives A/B firmware updates. Factory reset erases
-this data.
+This system does not automatically start the Docker daemon or application
+containers. The firmware application must start the daemon by invoking
+`/usr/bin/nerves-start-dockerd` after Nerves filesystem preparation has completed
+and `/root` is mounted read/write as ext4. It must wait for the Docker API to be
+ready before starting containers. The daemon stores images, container metadata,
+and writable layers under `/root/docker`, which survives A/B firmware updates.
+Factory reset erases this data.
 
 The firmware application owns container lifecycle. It should create containers
 with restart disabled (Docker's default, or `--restart=no`), then inspect and
