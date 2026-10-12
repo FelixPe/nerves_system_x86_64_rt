@@ -8,6 +8,9 @@ This is the base Nerves System configuration for a generic x86_64 system that
 can be run with Qemu. It can be used as a base for real x86_64 systems, but it
 probably will require some work.
 
+This system boots in UEFI mode using GPT and EFI GRUB. BIOS/MBR images are not
+supported; existing installations require a complete reflash to migrate.
+
 | Feature              | Description                     |
 | -------------------- | ------------------------------- |
 | CPU                  | Intel                           |
@@ -129,7 +132,7 @@ before the app. The app is also responsible for restarting failed containers.
 The Docker API is available on `/var/run/docker.sock`. Access to this socket
 allows control of the host and should be treated as root-level access.
 
-## Running in qemu
+## Running in QEMU (UEFI)
 
 It's possible to run Nerves projects built with this system in Qemu with some
 work. If you create a Nerves projects with the `nerves_system_x86_64_rt`
@@ -156,10 +159,16 @@ Use `fwup` to write the image for the first time:
 fwup -d disk.img _build/x86_64_dev/nerves/images/circuits_quickstart.fw
 ```
 
-Run qemu:
+This system is UEFI-only. Existing BIOS/MBR disks must be fully reflashed;
+they cannot be migrated with an OTA update. Run QEMU with OVMF. Firmware file
+locations vary by distribution; these paths match Debian/Ubuntu packages:
 
 ```sh
-qemu-system-x86_64 -drive file=disk.img,if=virtio,format=raw -net nic,model=virtio -net user,hostfwd=tcp::10022-:22 -nographic -serial mon:stdio -m 1024
+OVMF_CODE=/usr/share/OVMF/OVMF_CODE_4M.fd
+OVMF_VARS=/usr/share/OVMF/OVMF_VARS_4M.fd
+cp "$OVMF_VARS" OVMF_VARS.fd
+
+qemu-system-x86_64 -machine q35 -m 1024 -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" -drive if=pflash,format=raw,file=OVMF_VARS.fd -drive file=disk.img,if=virtio,format=raw -net nic,model=virtio -net user,hostfwd=tcp::10022-:22 -nographic -serial mon:stdio
 ```
 
 You should eventually get an IEx prompt. The first boot takes longer since the

@@ -21,18 +21,8 @@ cp $BINARIES_DIR/grubenv_b $BINARIES_DIR/grubenv_b_valid
 grub-editenv $BINARIES_DIR/grubenv_b_valid set booted_once=1
 grub-editenv $BINARIES_DIR/grubenv_b_valid set validated=1
 
-# Copy MBR boot code boot.img
-cp $TARGET_DIR/lib/grub/i386-pc/boot.img $BINARIES_DIR
-
-# Copy everything that's needed to build firmware images over to the
-# output directory so that it can be bundled with the system image.
-cp $NERVES_DEFCONFIG_DIR/grub.cfg $BINARIES_DIR
-
-# Remove the Buildroot-generated grub.cfg so avoid confusion.
-# We put our grub in the FAT filesystem at the beginning of the
-# disk so that it exists across firmware updates.
-rm -fr $TARGET_DIR/boot/grub/*
-
+# The EFI GRUB image uses grub-early.cfg for its normal-mode handoff and is
+# installed by Buildroot at images/efi-part/EFI/BOOT/bootx64.efi.
 # Create the fwup ops script to handling MicroSD/eMMC operations at runtime
 # NOTE: revert.fw is the previous, more limited version of this. ops.fw is
 #       backwards compatible.
