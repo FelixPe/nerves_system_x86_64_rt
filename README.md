@@ -57,6 +57,11 @@ windows fullscreen, and disables idle screen blanking. Cog's direct DRM
 backend and its local pointer patch are no longer included. Existing kernel
 and Nerves patches are unchanged.
 
+The root filesystem includes Intel's VA-API media driver and Mesa's Intel and
+Virtio/Venus Vulkan drivers with the Vulkan loader. Virtio/Venus acceleration
+also requires compatible host-side QEMU and virglrenderer support. Hardware
+acceleration depends on the GPU, firmware, and driver versions.
+
 The firmware application owns startup and supervision of both processes;
 the system does not automatically launch them or hard-code a kiosk URL.
 Create a private runtime directory owned by the user running Weston and Cog:
