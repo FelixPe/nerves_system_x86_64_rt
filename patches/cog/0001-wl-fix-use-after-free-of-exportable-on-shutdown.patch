@@ -1,0 +1,90 @@
+From cb186340e7776b4468f7af9f79e7ff58740eb57f Mon Sep 17 00:00:00 2001
+From: Nerves <nerves@localhost>
+Date: Mon, 26 Oct 2026 13:54:44 +0100
+Subject: [PATCH] wl: fix use-after-free of exportable on shutdown
+
+The WPE exportable is owned by the WebKitWebViewBackend and is freed when
+the web view is destroyed. The launcher disposes the shell (and views)
+before the platform, so cog_wl_platform_finalize() and late buffer
+release callbacks dereferenced a freed exportable, crashing in
+wpe_view_backend_exportable_fdo_egl_dispatch_release_exported_image().
+
+Clear the global exportable and image pointers from the backend destroy
+notify, skip releases once it is gone, and avoid destroying an already
+released wl_buffer twice.
+---
+ platform/wayland/cog-platform-wl.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/platform/wayland/cog-platform-wl.c b/platform/wayland/cog-platform-wl.c
+index 73e00dc..1e6bf08 100644
+--- a/platform/wayland/cog-platform-wl.c
++++ b/platform/wayland/cog-platform-wl.c
+@@ -1647,8 +1647,11 @@ static void
+ on_buffer_release (void* data, struct wl_buffer* buffer)
+ {
+     struct wpe_fdo_egl_exported_image * image = data;
+-    wpe_view_backend_exportable_fdo_egl_dispatch_release_exported_image (wpe_host_data.exportable,
+-                                                                         image);
++    if (wpe_host_data.exportable)
++        wpe_view_backend_exportable_fdo_egl_dispatch_release_exported_image (wpe_host_data.exportable,
++                                                                             image);
++    if (wpe_view_data.buffer == buffer)
++        wpe_view_data.buffer = NULL;
+     g_clear_pointer (&buffer, wl_buffer_destroy);
+ }
+ 
+@@ -1787,7 +1790,7 @@ shm_buffer_create (struct wl_resource *buffer_resource, size_t size)
+ static void
+ shm_buffer_destroy(struct shm_buffer *buffer)
+ {
+-    if (buffer->exported_buffer) {
++    if (buffer->exported_buffer && wpe_host_data.exportable) {
+         wpe_view_backend_exportable_fdo_egl_dispatch_release_shm_exported_buffer(wpe_host_data.exportable,
+                                                                                  buffer->exported_buffer);
+     }
+@@ -1812,7 +1815,7 @@ static void
+ on_shm_buffer_release(void *data, struct wl_buffer *wl_buffer)
+ {
+     struct shm_buffer *buffer = data;
+-    if (buffer->exported_buffer) {
++    if (buffer->exported_buffer && wpe_host_data.exportable) {
+         wpe_view_backend_exportable_fdo_egl_dispatch_release_shm_exported_buffer (wpe_host_data.exportable,
+                                                                                   buffer->exported_buffer);
+         buffer->exported_buffer = NULL;
+@@ -2561,7 +2564,7 @@ cog_wl_platform_finalize(GObject *object)
+     /* free WPE view data */
+     if (wpe_view_data.frame_callback != NULL)
+         wl_callback_destroy(wpe_view_data.frame_callback);
+-    if (wpe_view_data.image != NULL) {
++    if (wpe_view_data.image != NULL && wpe_host_data.exportable != NULL) {
+         wpe_view_backend_exportable_fdo_egl_dispatch_release_exported_image(wpe_host_data.exportable,
+                                                                             wpe_view_data.image);
+     }
+@@ -2587,6 +2590,17 @@ cog_wl_platform_finalize(GObject *object)
+     G_OBJECT_CLASS(cog_wl_platform_parent_class)->finalize(object);
+ }
+ 
++static void
++on_exportable_destroy(struct wpe_view_backend_exportable_fdo *exportable)
++{
++    /* Images are owned by the exportable; drop references before it is freed. */
++    if (wpe_host_data.exportable == exportable) {
++        wpe_view_data.image = NULL;
++        wpe_host_data.exportable = NULL;
++    }
++    wpe_view_backend_exportable_fdo_destroy(exportable);
++}
++
+ static WebKitWebViewBackend *
+ cog_wl_platform_get_view_backend(CogPlatform *platform, WebKitWebView *related_view, GError **error)
+ {
+@@ -2610,7 +2624,7 @@ cog_wl_platform_get_view_backend(CogPlatform *platform, WebKitWebView *related_v
+ 
+     WebKitWebViewBackend *wk_view_backend =
+         webkit_web_view_backend_new(wpe_view_data.backend,
+-                                    (GDestroyNotify) wpe_view_backend_exportable_fdo_destroy,
++                                    (GDestroyNotify) on_exportable_destroy,
+                                     wpe_host_data.exportable);
+     g_assert(wk_view_backend);
+ 
