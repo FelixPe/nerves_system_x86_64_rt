@@ -17,7 +17,12 @@ for setting in \
     BR2_PACKAGE_WESTON_DEFAULT_DRM=y \
     BR2_PACKAGE_WESTON_DRM=y \
     BR2_PACKAGE_WESTON_SHELL_KIOSK=y \
-    BR2_PACKAGE_SEATD_BUILTIN=y; do
+    BR2_PACKAGE_SEATD_BUILTIN=y \
+    BR2_PACKAGE_INTEL_MEDIADRIVER=y \
+    BR2_PACKAGE_LIBVA=y \
+    BR2_PACKAGE_MESA3D_VULKAN_DRIVER_INTEL=y \
+    BR2_PACKAGE_MESA3D_VULKAN_DRIVER_VIRTIO=y \
+    BR2_PACKAGE_VULKAN_LOADER=y; do
     grep -Fxq "$setting" "$work/.config"
 done
 if grep -Fxq BR2_PACKAGE_COG_PLATFORM_DRM=y "$work/.config"; then
@@ -25,7 +30,8 @@ if grep -Fxq BR2_PACKAGE_COG_PLATFORM_DRM=y "$work/.config"; then
     exit 1
 fi
 
-options=$(make -s -C "$buildroot" O="$work" printvars \
+options=$(make -s -C "$buildroot" O="$work" \
+    NERVES_DEFCONFIG_DIR="$root" printvars \
     VARS='COG_CONF_OPTS COG_PLATFORMS_LIST WESTON_CONF_OPTS')
 grep -Fq -- '-Dwayland_weston_direct_display=false' <<< "$options"
 if grep -Fq -- '-Dwayland_weston_direct_display=true' <<< "$options"; then
