@@ -32,7 +32,14 @@ fi
 
 options=$(make -s -C "$buildroot" O="$work" \
     NERVES_DEFCONFIG_DIR="$root" printvars \
-    VARS='COG_CONF_OPTS COG_PLATFORMS_LIST WESTON_CONF_OPTS')
+    VARS='COG_CONF_OPTS COG_PLATFORMS_LIST WESTON_CONF_OPTS INTEL_MEDIADRIVER_CONF_OPTS')
+for setting in \
+    -DCMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES=ON \
+    -DCMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES=ON \
+    -DCMAKE_C_RESPONSE_FILE_FLAG=-Wp,@ \
+    -DCMAKE_CXX_RESPONSE_FILE_FLAG=-Wp,@; do
+    grep -Fq -- "$setting" <<< "$options"
+done
 grep -Fq -- '-Dwayland_weston_direct_display=false' <<< "$options"
 if grep -Fq -- '-Dwayland_weston_direct_display=true' <<< "$options"; then
     echo "Cog 0.18.5 cannot use Weston 15 direct-display protocols" >&2
