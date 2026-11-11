@@ -19,7 +19,6 @@ defmodule NervesSystemX8664Rt.MixProject do
       description: description(),
       package: package(),
       deps: deps(),
-      aliases: [loadconfig: [&bootstrap/1]],
       docs: docs()
     ]
   end
@@ -28,14 +27,11 @@ defmodule NervesSystemX8664Rt.MixProject do
     []
   end
 
-  defp bootstrap(args) do
-    set_target()
-    Application.start(:nerves_bootstrap)
-    Mix.Task.run("loadconfig", args)
-  end
-
   def cli do
-    [preferred_envs: %{docs: :docs, "hex.build": :docs, "hex.publish": :docs}]
+    [
+      preferred_envs: %{docs: :docs, "hex.build": :docs, "hex.publish": :docs},
+      default_target: :target
+    ]
   end
 
   defp nerves_package do
@@ -44,6 +40,7 @@ defmodule NervesSystemX8664Rt.MixProject do
       artifact_sites: [
         {:github_releases, "#{@github_organization}/#{@app}"}
       ],
+      artifact_checksum: true,
       build_runner_opts: build_runner_opts(),
       platform: Nerves.System.BR,
       platform_config: [
@@ -60,14 +57,14 @@ defmodule NervesSystemX8664Rt.MixProject do
         {"TARGET_GCC_FLAGS",
          "-m64 -fstack-protector-strong -march=x86-64 -fPIE -pie -Wl,-z,now -Wl,-z,relro"}
       ],
-      checksum: package_files()
+      checksum: source_finger_print_files()
     ]
   end
 
   defp deps do
     [
       {:nerves, "~> 1.11 or ~> 2.0 or ~> 2.0.0-dev", runtime: false},
-      {:nerves_system_br, "1.35.2", runtime: false},
+      {:nerves_system_br, "1.35.3", runtime: false},
       {:nerves_toolchain_x86_64_nerves_linux_gnu, "~> 15.3.0", runtime: false},
       {:nerves_system_linter, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :docs, runtime: false}
@@ -102,8 +99,9 @@ defmodule NervesSystemX8664Rt.MixProject do
     ]
   end
 
-  defp package_files do
+  defp source_finger_print_files do
     [
+      "config/config.exs",
       "fwup_include",
       "rootfs_overlay",
       "patches",
@@ -120,11 +118,19 @@ defmodule NervesSystemX8664Rt.MixProject do
       "mix.exs",
       "nerves_defconfig",
       "post-build.sh",
-      "post-createfs.sh",
+      "post-createfs.sh"
+    ]
+  end
+
+  defp package_files do
+    [
+      "CHANGELOG.md",
+      "checksum.exs",
+      "LICENSES/*",
       "README.md",
       "REUSE.toml",
       "VERSION"
-    ]
+    ] ++ source_finger_print_files()
   end
 
   defp build_runner_opts() do
@@ -139,11 +145,4 @@ defmodule NervesSystemX8664Rt.MixProject do
     end
   end
 
-  defp set_target() do
-    if function_exported?(Mix, :target, 1) do
-      apply(Mix, :target, [:target])
-    else
-      System.put_env("MIX_TARGET", "target")
-    end
-  end
 end
