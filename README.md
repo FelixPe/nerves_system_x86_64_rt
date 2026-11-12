@@ -62,6 +62,25 @@ Virtio/Venus Vulkan drivers with the Vulkan loader. Virtio/Venus acceleration
 also requires compatible host-side QEMU and virglrenderer support. Hardware
 acceleration depends on the GPU, firmware, and driver versions.
 
+Intel's `i915` and `xe` kernel drivers are modules. NervesUEvent discovers the
+GPU and invokes `modprobe` after the root filesystem is mounted, so the drivers
+can read their firmware from `/lib/firmware`. Built-in Intel GPU drivers would
+request it before that filesystem is available. This uses NervesUEvent's
+default `autoload_modules: true`, not an eudev daemon; devtmpfs creates the device
+nodes. Core DRM and Virtio graphics remain built in.
+Before starting Weston on Intel hardware, wait for the GPU's DRM card and render
+nodes under `/dev/dri` rather than using a fixed startup delay.
+
+For an existing build directory, run `make linux-dirclean` followed by `make`
+in `mix nerves.system.shell` to rebuild the kernel and install the new GPU
+modules. Rebuild and deploy the firmware application using the resulting
+system artifact; changing the firmware files alone does not update the kernel.
+On real hardware, check `dmesg` for `i915`/`xe` initialization and firmware-load
+errors, confirm that the GPU has a render node under `/dev/dri`, and inspect
+Weston's startup log for a hardware GL renderer rather than `llvmpipe` or
+`softpipe`. Configuration checks cannot establish that hardware acceleration
+works on a particular GPU.
+
 The firmware application owns startup and supervision of both processes;
 the system does not automatically launch them or hard-code a kiosk URL.
 Create a private runtime directory owned by the user running Weston and Cog:

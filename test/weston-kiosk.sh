@@ -20,13 +20,23 @@ for setting in \
     BR2_PACKAGE_SEATD_BUILTIN=y \
     BR2_PACKAGE_INTEL_MEDIADRIVER=y \
     BR2_PACKAGE_LINUX_FIRMWARE_I915=y \
+    BR2_PACKAGE_LINUX_FIRMWARE_XE=y \
     BR2_PACKAGE_LIBVA=y \
     BR2_PACKAGE_MESA3D_VULKAN_DRIVER_INTEL=y \
     BR2_PACKAGE_MESA3D_VULKAN_DRIVER_VIRTIO=y \
     BR2_PACKAGE_VULKAN_LOADER=y; do
     grep -Fxq "$setting" "$work/.config"
 done
-grep -Fxq CONFIG_DRM_I915=y "$root/linux-6.18.defconfig"
+grep -Fxq CONFIG_MODULES=y "$root/linux-6.18.defconfig"
+for driver in I915 XE; do
+    if ! grep -Fxq "CONFIG_DRM_$driver=m" "$root/linux-6.18.defconfig"; then
+        echo "Intel $driver must load as a module after /lib/firmware is available" >&2
+        exit 1
+    fi
+done
+for setting in CONFIG_MODPROBE=y CONFIG_FEATURE_MODUTILS_ALIAS=y; do
+    grep -Fxq "$setting" "$root/deps/nerves_system_br/board/nerves-common/busybox.config"
+done
 if grep -Fxq BR2_PACKAGE_COG_PLATFORM_DRM=y "$work/.config"; then
     echo "Cog must use Wayland rather than direct DRM" >&2
     exit 1
