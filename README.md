@@ -118,6 +118,19 @@ for `/root`, including Docker data.
 This layout is intended for complete flashing of new devices. Migration from
 the previous partition layout is not supported.
 
+### Boot identity
+
+Firmware builds can override `ESP_LABEL`, `DISK_GUID`, `ESP_GUID`,
+`ROOTFS_A_GUID`, `ROOTFS_B_GUID`, `APP_GUID`, and `GRUB_CONFIG` through
+environment variables. `GRUB_CONFIG` is the path to the GRUB configuration
+included in the firmware. Its EFI label and root `PARTUUID` values must match
+the corresponding firmware settings. Without overrides, the existing Nerves
+label, GUIDs, and GRUB configuration are unchanged.
+
+Use distinct identities for disks that may be attached at the same time. These
+settings affect complete flashes; they do not rewrite existing partition IDs or
+GRUB configuration during firmware upgrades.
+
 ## Docker containers
 
 This system does not automatically start the Docker daemon or application
