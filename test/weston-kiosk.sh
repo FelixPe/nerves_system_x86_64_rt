@@ -28,9 +28,9 @@ for setting in \
     grep -Fxq "$setting" "$work/.config"
 done
 grep -Fxq CONFIG_MODULES=y "$root/linux-6.18.defconfig"
-for driver in I915 XE; do
+for driver in I915 XE VIRTIO_GPU; do
     if ! grep -Fxq "CONFIG_DRM_$driver=m" "$root/linux-6.18.defconfig"; then
-        echo "Intel $driver must load as a module after /lib/firmware is available" >&2
+        echo "GPU driver $driver must load as a module during userspace device discovery" >&2
         exit 1
     fi
 done

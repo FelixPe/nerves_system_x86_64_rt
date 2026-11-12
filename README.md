@@ -67,9 +67,14 @@ GPU and invokes `modprobe` after the root filesystem is mounted, so the drivers
 can read their firmware from `/lib/firmware`. Built-in Intel GPU drivers would
 request it before that filesystem is available. This uses NervesUEvent's
 default `autoload_modules: true`, not an eudev daemon; devtmpfs creates the device
-nodes. Core DRM and Virtio graphics remain built in.
-Before starting Weston on Intel hardware, wait for the GPU's DRM card and render
-nodes under `/dev/dri` rather than using a fixed startup delay.
+nodes. The `virtio_gpu` driver is also a module, loaded only when a matching
+virtual GPU is present. It does not need external GPU firmware; making it
+modular avoids loading it on physical hardware and defers QEMU graphics
+initialization to userspace device discovery. Core DRM and the Virtio transport,
+storage, and network drivers remain built in.
+Before starting Weston, wait for the GPU's DRM card and, when using hardware
+acceleration, render nodes under `/dev/dri` rather than using a fixed startup
+delay.
 
 For an existing build directory, run `make linux-dirclean` followed by `make`
 in `mix nerves.system.shell` to rebuild the kernel and install the new GPU
