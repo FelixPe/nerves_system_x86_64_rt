@@ -137,7 +137,7 @@ Use a disk of at least 32 GB. Both read-only SquashFS rootfs slots reserve
 4 GiB (8388608 sectors of 512 bytes) each. The writable ext4 application
 partition mounted at `/root` has a 10 GiB minimum and expands to use the
 remaining disk space. On a 32 GB disk, approximately 21.8 GiB is available
-for `/root`, including Docker data.
+for `/root`, including container and application data.
 
 This layout is intended for complete flashing of new devices. Migration from
 the previous partition layout is not supported.
@@ -155,24 +155,34 @@ Use distinct identities for disks that may be attached at the same time. These
 settings affect complete flashes; they do not rewrite existing partition IDs or
 GRUB configuration during firmware upgrades.
 
-## Docker containers
+## OCI containers
 
-This system does not automatically start the Docker daemon or application
-containers. The firmware application must start the daemon by invoking
-`/usr/bin/nerves-start-dockerd` after Nerves filesystem preparation has completed
-and `/root` is mounted read/write as ext4. It must wait for the Docker API to be
-ready before starting containers. The daemon stores images, container metadata,
-and writable layers under `/root/docker`, which survives A/B firmware updates.
-Factory reset erases this data.
+This system includes `crun` with Linux capabilities and seccomp support for
+running prepared OCI bundles (`config.json` and a root filesystem). It does not
+include a container engine, image pull/unpack tooling, or automatic container
+startup. The firmware application owns bundle preparation, persistent storage,
+container networking, lifecycle, and supervision.
 
-The firmware application owns container lifecycle. It should create containers
-with restart disabled (Docker's default, or `--restart=no`), then inspect and
-start the desired containers after the Docker API is ready. This lets the app
-control startup order and health checks instead of Docker starting containers
-before the app. The app is also responsible for restarting failed containers.
+Before starting containers, wait for Nerves filesystem preparation to complete
+and `/root` to be mounted read/write. For bundles using cgroup resource controls,
+the application must prepare the cgroup hierarchy, including mounting cgroup v2
+at `/sys/fs/cgroup` if it is not already mounted. No daemon launcher or automatic
+cgroup-mount helper is provided. `crun` does not automatically configure a bridge
+or NAT; networking must be configured separately or the bundle must explicitly
+use host networking.
 
-The Docker API is available on `/var/run/docker.sock`. Access to this socket
-allows control of the host and should be treated as root-level access.
+`libcap`, `libseccomp`, `iproute2`, `tar`, and `gzip` are retained for container
+support, along with the kernel's cgroup, namespace, bridge/veth, and OverlayFS
+facilities. This is not a preconfigured rootless-container environment.
+
+When migrating an existing system build, perform a clean Buildroot rebuild:
+run `make clean` followed by `make` in `mix nerves.system.shell`, then rebuild
+and deploy the firmware application using the new system artifact. Buildroot
+does not uninstall files from previously enabled packages during incremental
+builds. Remove any application calls to the old `nerves-start-dockerd` launcher.
+Existing `/root/docker` data is not deleted by this change; remove it separately
+only if it is no longer needed. The configuration check is
+`bash test/container-runtime.sh` after preparing the Nerves Buildroot tree.
 
 ## Running in QEMU (UEFI)
 

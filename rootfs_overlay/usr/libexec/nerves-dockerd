@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec /usr/bin/dockerd "$@" >>/root/docker/dockerd.log 2>&1
