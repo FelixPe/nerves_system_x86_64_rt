@@ -142,6 +142,24 @@ for `/root`, including container and application data.
 This layout is intended for complete flashing of new devices. Migration from
 the previous partition layout is not supported.
 
+### Removable exFAT media
+
+The kernel includes built-in exFAT support for Windows-compatible removable data
+partitions and files larger than FAT32's 4-GiB limit. Existing UTF-8 filesystem
+support is retained. The firmware application owns media discovery and mounting;
+this system change does not automatically mount removable media or change the
+FAT EFI boot partition or the ext4 application partition mounted at `/root`.
+Formatting tools remain a host-side requirement; no exFAT userspace package is
+needed just to mount a prepared data partition with the kernel driver.
+
+When reusing a system build directory, run `make linux-dirclean` followed by
+`make` in `mix nerves.system.shell`, then rebuild the firmware application using
+the new system artifact. Verify that `/proc/filesystems` lists `exfat` and that
+a prepared exFAT partition mounts read-only on the rebuilt system. Configuration
+checks alone do not verify filesystem operation; the installer media builder,
+filesystem detection, and QEMU checks must be updated after the new system is
+available.
+
 ### Boot identity
 
 Firmware builds can override `ESP_LABEL`, `DISK_GUID`, `ESP_GUID`,
